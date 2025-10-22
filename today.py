@@ -5,6 +5,7 @@ import os
 from lxml import etree
 import time
 import hashlib
+import re
 
 # Fine-grained personal access token with All Repositories access:
 # Account permissions: read:Followers, read:Starring, read:Watching
@@ -341,19 +342,20 @@ def svg_overwrite(filename, age_data, commit_data, star_data, repo_data, contrib
 
 def justify_format(root, element_id, new_text, length=0):
     """
-    Updates and formats the text of the element, and modifes the amount of dots in the previous element to justify the new text on the svg
+    Updates and formats the text of the element, and modifies the amount of dots in the previous element to justify the new text on the svg
     """
     if isinstance(new_text, int):
         new_text = f"{'{:,}'.format(new_text)}"
     new_text = str(new_text)
     find_and_replace(root, element_id, new_text)
+    
+    # Calculate the number of dots needed
     just_len = max(0, length - len(new_text))
-    if just_len <= 2:
-        dot_map = {0: '', 1: ' ', 2: '. '}
-        dot_string = dot_map[just_len]
-    else:
-        dot_string = ' ' + ('.' * just_len) + ' '
-    find_and_replace(root, f"{element_id}_dots", dot_string)
+    dots = f" {' ' * (just_len - 1)}" if just_len > 0 else " "  # Ensure consistent spacing
+    
+    # Update the dots for the corresponding element
+    dots_element_id = f"{element_id}_dots"
+    find_and_replace(root, dots_element_id, dots)
 
 
 def find_and_replace(root, element_id, new_text):
@@ -483,3 +485,5 @@ if __name__ == '__main__':
 
     print('Total GitHub GraphQL API calls:', '{:>3}'.format(sum(QUERY_COUNT.values())))
     for funct_name, count in QUERY_COUNT.items(): print('{:<28}'.format('   ' + funct_name + ':'), '{:>6}'.format(count))
+
+    
